@@ -1,0 +1,109 @@
+﻿@page "/transactions"
+@using FinanceManager.web.Data
+@using FinanceManager.web.Services
+@using FinanceManager.web.Shared
+@inject ITransactionService TransactionService
+@inject NavigationManager UriHelper
+
+<div class="col-12">
+    <h3>Incomes and Expenses</h3>
+
+    <div>
+        <div style="float:left">
+            <button class="btn btn-primary" @onclick="AddTransaction">Add Transaction</button>
+        </div>
+        <div style="float:right; width:40%;">
+            <div class="col-sm-6" style="float:left">
+                <input class="form-control" type="text" placeholder="Search" @bind="Filter" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+
+    <p/>
+
+    <div>
+        @if (Transactions == null)
+        {
+            <SpinnerGrowTemplate></SpinnerGrowTemplate>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Transactions)
+                    {
+                        @if (!IsVisible(item))
+                            continue;
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.TransactionType</td>
+                            <td>@item.Category.Name </td>
+                            <td>@item.Amount</td>
+                            <td>@item.ExpenseDate.ToShortDateString()</td>
+                            <td>
+                                <button class="btn btn-primary" @onclick="() => EditTransaction(item.Id)">Edit</button> |
+                                <button class="btn btn-primary" @onclick="() => GetTransactionDetails(item.Id)">Details</button> |
+                                <button class="btn btn-primary" @onclick="() => DeleteTransaction(item.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+
+@code {
+    public IEnumerable<Transaction> Transactions { get; set; }
+
+    public string Filter { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Transactions = (await TransactionService.GetAllAsync()).ToList();
+    }
+
+    private void AddTransaction()
+    {
+        UriHelper.NavigateTo("/addtransaction");
+    }
+
+    private void EditTransaction(int id)
+    {
+        UriHelper.NavigateTo("/edittransaction/" + id.ToString());
+    }
+
+    private void GetTransactionDetails(int id)
+    {
+        UriHelper.NavigateTo("/transactiondetails/" + id.ToString());
+    }
+
+    protected void DeleteTransaction(int id)
+    {
+        TransactionService.DeleteAsync(id);
+        Transactions = Transactions.Where(u => u.Id != id).ToList();
+        StateHasChanged();
+    }
+
+    private bool IsVisible(Transaction item)
+    {
+        if (string.IsNullOrEmpty(Filter))
+            return true;
+
+        if (item.Name.Contains(Filter, StringComparison.OrdinalIgnoreCase) || item.Category.Name.Contains(Filter, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+}

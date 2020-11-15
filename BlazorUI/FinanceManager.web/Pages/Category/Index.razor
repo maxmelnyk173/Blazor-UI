@@ -1,0 +1,108 @@
+﻿@page "/categories"
+@using FinanceManager.web.Data
+@using FinanceManager.web.Services
+@using FinanceManager.web.Shared
+@inject ICategoryService CategoryService
+@inject NavigationManager UriHelper
+
+<div class="col-12">
+    <h3>Categories</h3>
+
+    <div>
+        <div style="float:left">
+            <button class="btn btn-primary" @onclick="AddCategory">Add Category</button>
+        </div>
+        <div style="float:right; width:40%;">
+            <div class="col-sm-6" style="float:left">
+                <input class="form-control" type="text" placeholder="Search" @bind="Filter" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+
+    <br />
+
+    <div>
+        @if (Categories == null)
+        {
+            <SpinnerGrowTemplate></SpinnerGrowTemplate>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Categories)
+                    {
+                        @if (!IsVisible(item))
+                            continue;
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>
+                                <button class="btn btn-primary" @onclick="() => EditCategory(item.Id)">Edit</button> |
+                                <button class="btn btn-primary" @onclick="() => GetCategoryDetails(item.Id)">Details</button> |
+                                <button class="btn btn-primary" @onclick="() => DeleteCategory(item.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+
+@code {
+    public IEnumerable<Category> Categories { get; set; }
+
+    public Category Category { get; set; }
+
+    public string Filter { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = (await CategoryService.GetAllAsync()).ToList();
+    }
+
+    private async void LoadCategories()
+    {
+        Categories = (await CategoryService.GetAllAsync()).ToList();
+    }
+
+    private void AddCategory()
+    {
+        UriHelper.NavigateTo("/addcategory");
+    }
+
+    private void EditCategory(int id)
+    {
+        UriHelper.NavigateTo("/editcategory/" + id.ToString());
+    }
+
+    private void GetCategoryDetails(int id)
+    {
+        UriHelper.NavigateTo("/categorydetails/" + id.ToString());
+    }
+
+    private void DeleteCategory(int id)
+    {
+        CategoryService.DeleteAsync(id);
+        Categories = Categories.Where(u => u.Id != id).ToList();
+        StateHasChanged();
+    }
+
+    private bool IsVisible(Category item)
+    {
+        if (string.IsNullOrEmpty(Filter))
+            return true;
+
+        if (item.Name.Contains(Filter, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+}

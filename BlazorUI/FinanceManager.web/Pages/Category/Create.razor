@@ -1,0 +1,54 @@
+﻿@page "/addcategory"
+@using FinanceManager.web.Data
+@using FinanceManager.web.Services
+@inject ICategoryService CategoryService
+@inject NavigationManager UriHelper
+
+<EditForm Model="@Category" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <h3>Add Category</h3>
+    <hr />
+    <div class="form-group row">
+        <label for="Name" class="col-sm-2 col-form-label">
+            Name
+        </label>
+        <div class="col-sm-10">
+            <InputText id="Name" class="form-control" placeholder="Name"
+                       @bind-Value="Category.Name" />
+            <ValidationMessage For="@(() => Category.Name)" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <label for="Description" class="col-sm-2 col-form-label">
+            Description
+        </label>
+        <div class="col-sm-10">
+            <InputText id="description" class="form-control" placeholder="Description"
+                       @bind-Value="Category.Description" />
+            <ValidationMessage For="@(() => Category.Description)" />
+        </div>
+    </div>
+    <div>
+    <button class="btn btn-primary" type="submit">Submit</button> <button class="btn btn-primary" @onclick="() => GetBack()">Back</button>
+    </div>
+</EditForm>
+
+
+@code {
+    private Category Category { get; set; } = new Category();
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    protected async Task HandleValidSubmit()
+    {
+        await CategoryService.SaveAsync(Category);
+
+        NavigationManager.NavigateTo("/categories");
+    }
+
+    private void GetBack()
+    {
+        UriHelper.NavigateTo("/categories/");
+    }
+}

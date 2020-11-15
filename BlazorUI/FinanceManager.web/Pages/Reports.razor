@@ -1,0 +1,143 @@
+﻿@page "/reports"
+@using FinanceManager.web.Data
+@using FinanceManager.web.Services
+@using FinanceManager.web.Shared
+@using System.Globalization;
+@inject ITransactionService TransactionService
+@inject NavigationManager UriHelper
+
+<div class="col-12">
+    <div>
+        <div style="float:left"> 
+            <EditForm Model="@Transaction">
+                <h3>Reports</h3>
+                <hr />
+                <ValidationSummary />
+                <div class="form-group row">
+                    <label for="Start Date" class="col-sm-3 col-form-label">
+                        Start Date
+                    </label>
+                    <div class="col-sm-7">
+                        <InputDate @bind-Value="StartDate" class="form-control" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="End Date" class="col-sm-3 col-form-label">
+                        End Date
+                    </label>
+                    <div class="col-sm-7">
+                        <InputDate @bind-Value="EndDate" class="form-control" />
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-primary" @onclick="GetDayReport">Daily Report Transaction</button>
+                    <button class="btn btn-primary" @onclick="GetCustomReport">Month Report Transaction</button>
+                </div>
+            </EditForm>
+        </div>
+        <div style="float:right; width:40%;">
+            <div class="col-sm-6" style="float:left">
+                <input class="form-control" type="text" placeholder="Search" @bind="Filter" @bind:event="oninput" />
+            </div>
+        </div>
+    </div>
+
+    <br />
+
+    @if (IsExecuted == true)
+    {
+        <div>
+            @if (Transactions == null)
+            {
+                <SpinnerGrowTemplate></SpinnerGrowTemplate>
+            }
+            else
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Transactions)
+                        {
+                            @if (!IsVisible(item))
+                                continue;
+                            <tr>
+                                <td>@item.Name</td>
+                                <td>@item.TransactionType</td>
+                                <td>@item.Category.Name </td>
+                                <td>@item.Amount</td>
+                                <td>@item.ExpenseDate.ToShortDateString()</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    }
+
+</div>
+
+
+@code {
+    private FinanceManager.web.Data.Transaction Transaction { get; set; } = new FinanceManager.web.Data.Transaction();
+
+    public IEnumerable<FinanceManager.web.Data.Transaction> Transactions { get; set; }
+
+    public DateTime StartDate { get; set; } = DateTime.Now;
+
+    public DateTime EndDate { get; set; } = DateTime.Now;
+
+    public decimal TotalAmount { get; set; }
+
+    public bool IsExecuted { get; set; } = false;
+
+    public string Filter { get; set; }
+
+    private async void GetDayReport()
+    {
+        Transactions = (await TransactionService.GetDailyReport(StartDate.ToString("yyyy-MM-dd"))).ToList();
+
+        if(Transactions != null)
+        {
+            IsExecuted = true;
+
+            StateHasChanged();
+        }
+    }
+
+    private async void GetCustomReport()
+    {
+        Transactions = (await TransactionService.GetMonthReport(StartDate.ToString("yyyy-MM-dd"), EndDate.ToString("yyyy-MM-dd"))).ToList();
+
+        if (Transactions != null)
+        {
+            IsExecuted = true;
+
+            StateHasChanged();
+        }
+    }
+
+    private bool IsVisible(FinanceManager.web.Data.Transaction item)
+    {
+        if (string.IsNullOrEmpty(Filter))
+            return true;
+
+        if (item.Name.Contains(Filter, StringComparison.OrdinalIgnoreCase) || item.Category.Name.Contains(Filter, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    private void GetBack()
+    {
+        UriHelper.NavigateTo("/categories/");
+    }
+}

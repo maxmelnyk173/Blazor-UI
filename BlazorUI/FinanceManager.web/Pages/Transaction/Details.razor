@@ -1,0 +1,46 @@
+﻿@page "/transactiondetails/{id}"
+@using FinanceManager.web.Data
+@using FinanceManager.web.Services
+@inject ITransactionService TransactionService
+@inject NavigationManager UriHelper
+
+<h3>Details</h3>
+<div class="col-12">
+    @if (Transaction == null || Transaction.Category == null)
+    {
+        <SpinnerGrowTemplate></SpinnerGrowTemplate>
+    }
+    else
+    {
+
+        <div class="card bg-light mt-3" style="width:18rem ">
+            <div class="card-body">
+                <h3 class="card-title">Name: @Transaction.Name</h3>
+                <p class="card-text">Type: @Transaction.TransactionType</p>
+                <p class="card-text">Category Name: @Transaction.Category.Name</p>
+                <p class="card-text">Amount: @Transaction.Amount</p>
+                <p class="card-text">Date: @Transaction.ExpenseDate.ToShortDateString()</p>
+                <p class="card-text">Description: @Transaction.Description</p>
+            </div>
+        </div>
+    }
+    <br />
+    <button class="btn btn-primary" @onclick="() => GetBack()">Back</button>
+</div>
+
+
+@code {
+    Transaction Transaction = new Transaction();
+
+    [Parameter]
+    public string Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Transaction = await TransactionService.GetByIdAsync(int.Parse(Id));
+    }
+    private void GetBack()
+    {
+        UriHelper.NavigateTo("/transactions/");
+    }
+}

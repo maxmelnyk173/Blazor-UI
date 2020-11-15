@@ -1,0 +1,35 @@
+﻿@page "/categorydetails/{id}"
+@using FinanceManager.web.Data
+@using FinanceManager.web.Services
+@inject ICategoryService CategoryService
+@inject NavigationManager UriHelper
+
+<h3>Category Details</h3>
+<div class="col-12">
+    <div class="card bg-light mt-3" style="width:18rem ">
+        <div class="card-body">
+            <h3 class="card-title">Name: @Category.Name</h3>
+            <p class="card-text">Description: @Category.Description</p>
+        </div>
+    </div>
+    <br />
+    <button class="btn btn-primary" @onclick="() => GetBack()">Back</button>
+</div>
+
+
+@code {
+    public Category Category { get; set; } = new Category();
+
+    [Parameter]
+    public string Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Category = await CategoryService.GetByIdAsync(int.Parse(Id));
+    }
+
+    private void GetBack()
+    {
+        UriHelper.NavigateTo("/categories");
+    }
+}
